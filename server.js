@@ -2,9 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 
-require("dotenv").config({
-  path: "./models/cloud.env",
-});
+require("dotenv").config();
 
 const app = express();
 
