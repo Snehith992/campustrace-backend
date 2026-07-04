@@ -3,6 +3,7 @@ const router = express.Router();
 
 const Claim = require("../models/Claim");
 const Item = require("../models/Item");
+const analyzeClaim = require("../utils/gemini");
 
 router.post("/", async (req, res) => {
 
@@ -13,63 +14,26 @@ router.post("/", async (req, res) => {
     );
 
     let score = 0;
-    let recommendation =
-      "Needs Verification";
+let recommendation = "Needs Verification";
+let aiReason = "AI analysis not available.";
 
-    if (item) {
+if (item) {
 
-      const itemText = (
-        item.description +
-        " " +
-        item.secretMark
-      ).toLowerCase();
+  try {
 
-      const claimText = (
-        req.body.reason +
-        " " +
-        req.body.claimantProof
-      ).toLowerCase();
+    const aiResult = await analyzeClaim(item, req.body);
 
-      const itemWords =
-        itemText.split(" ");
+    score = aiResult.score;
+    recommendation = aiResult.recommendation;
+    aiReason = aiResult.reason;
 
-      let matched = 0;
+  } catch (error) {
 
-      itemWords.forEach((word) => {
+    console.log("Gemini Error:", error);
 
-        if (
-          word.length > 3 &&
-          claimText.includes(word)
-        ) {
-          matched++;
-        }
+  }
 
-      });
-
-      score = Math.min(
-        100,
-        Math.round(
-          (matched /
-            Math.max(
-              itemWords.length,
-              1
-            )) *
-            100
-        )
-      );
-
-      if (score >= 70) {
-
-        recommendation =
-          "Likely Owner";
-
-      } else if (score >= 40) {
-
-        recommendation =
-          "Possible Match";
-
-      }
-    }
+}
 
     const claim =
       await Claim.create({
@@ -95,6 +59,8 @@ router.post("/", async (req, res) => {
 
         aiRecommendation:
           recommendation,
+
+        aiReason: aiReason,
 
       });
 

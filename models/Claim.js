@@ -26,6 +26,11 @@ const claimSchema = new mongoose.Schema({
     default: "Needs Verification",
   },
 
+  aiReason: {
+  type: String,
+  default: "AI analysis not available.",
+  },
+
   status: {
     type: String,
     default: "pending",
